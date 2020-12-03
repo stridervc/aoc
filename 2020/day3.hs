@@ -18,8 +18,7 @@ whatsHere topo (x,y)
 -- how many trees do we hit with given movement strategy
 treesHit :: Topo -> Strat -> Int
 treesHit topo strat = length $ filter (=='#') whatss
-  where moves   = repeat strat
-        poss    = scanl applyMove (0,0) moves
+  where poss    = scanl applyMove (0,0) $ repeat strat
         whatss  = takeWhile (/='X') $ map (whatsHere topo) poss
 
 main = do
