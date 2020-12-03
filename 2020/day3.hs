@@ -20,7 +20,7 @@ treesHit :: Topo -> Strat -> Int
 treesHit topo strat = length $ filter isTree whatss
   where poss    = scanl applyMove (0,0) $ repeat strat
         whatss  = takeWhile isJust $ map (whatsHere topo) poss
-        isTree  = (\x -> x == Just '#')
+        isTree  = (== Just '#')
 
 main = do
   topo <- lines <$> readFile "input3.txt"
