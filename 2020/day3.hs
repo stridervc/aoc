@@ -15,6 +15,7 @@ whatsHere topo (x,y)
   | otherwise         = topo!!y!!x'
   where x'  = x `mod` length (topo!!y)
 
+-- how many trees do we hit with given movement strategy
 treesHit :: Topo -> Strat -> Int
 treesHit topo strat = length $ filter (=='#') whatss
   where moves   = repeat strat
