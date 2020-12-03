@@ -1,5 +1,3 @@
-import System.IO
-
 type Pos    = (Int,Int)
 type Move   = (Int,Int)
 type Strat  = (Int,Int)
