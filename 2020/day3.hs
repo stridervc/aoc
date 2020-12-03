@@ -23,10 +23,10 @@ main = do
   topo <- lines <$> readFile "input3.txt"
 
   --- Part One ---
-  putStrLn $ show $ treesHit topo (3,1)
+  print $ treesHit topo (3,1)
 
   --- Part Two ---
   let strats = [(1,1), (3,1), (5,1), (7,1), (1,2)]
   let hits = map (treesHit topo) strats
 
-  putStrLn $ show $ foldl1 (*) hits
+  print $ product hits
