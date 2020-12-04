@@ -46,9 +46,13 @@ isValid2 :: Passport -> Bool
 isValid2 p = isValid p && (and $ map isValidPair pairs)
   where pairs = map toPair p
 
+-- for Roland
+(|>) = flip (<$>)
+
 main = do
-  entries <- splitOn "\n\n" <$> readFile "input4.txt"
-  let passports = map words entries
+  -- these two are equivalent
+  -- passports <- map words <$> splitOn "\n\n" <$> readFile "input4.txt"
+  passports <- readFile "input4.txt" |> splitOn "\n\n" |> map words
 
   -- Part One --
   print $ length $ filter id $ map isValid passports
