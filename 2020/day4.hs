@@ -25,7 +25,7 @@ isValidPair (k,v)
     otherwise -> False
   | k == "hcl"  = isrgb
   | k == "ecl"  = v `elem` ecls
-  | k == "pid"  = length v == 9 && (and $ map isNumber v)
+  | k == "pid"  = len == 9 && (and $ map isNumber v)
   | k == "cid"  = True
   | otherwise   = False
 
