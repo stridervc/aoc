@@ -1,6 +1,7 @@
 type BPass  = String
 type Row    = Int
 type Col    = Int
+type SeatID = Int
 
 -- Return new lower and upper bounds, given starting bounds, chars that specify each, and the
 -- char to apply
@@ -27,12 +28,20 @@ seat bp = (row,col)
         row     = narrowDown ('F','B') rowstr
         col     = narrowDown ('L','R') colstr
 
-seatID :: (Row,Col) -> Int
+seatID :: (Row,Col) -> SeatID
 seatID (r,c) = r*8+c
+
+isMySeat :: [SeatID] -> SeatID -> Bool
+isMySeat sids sid   = emptySeat && neighbours
+  where emptySeat   = not $ sid `elem` sids
+        neighbours  = (sid-1) `elem` sids && (sid+1) `elem` sids
 
 main = do
   passes <- lines <$> readFile "input5.txt"
 
   -- Part One --
-  print $ maximum $ map (seatID . seat) passes
+  let ids = map (seatID . seat) passes
+  print $ maximum ids
 
+  -- Part Two --
+  print $ head $ dropWhile (not . isMySeat ids) [2..]
