@@ -1,47 +1,30 @@
+import Data.List (sort)
+
 type BPass  = String
-type Row    = Int
-type Col    = Int
 type SeatID = Int
 
--- Return new lower and upper bounds, given starting bounds, chars that specify each, and the
--- char to apply
--- (Lower half char, higher half char) -> (Lower bound, Upper bound) -> Char to apply -> Result
-half :: (Char,Char) -> (Int,Int) -> Char -> (Int,Int)
-half (lc,hc) (l,h) c
-  | c == lc   = (l, l+halve-1)
-  | c == hc   = (l+halve, h)
-  where halve = (h-l+1) `div` 2
+-- binary string to int
+binToInt :: String -> Int
+binToInt []       = 0
+binToInt ('1':xs) = (2^(length xs)) + binToInt xs
+binToInt (_:xs)   = binToInt xs
 
-narrowDown' :: (Char,Char) -> (Int,Int) -> String -> (Int,Int)
-narrowDown' _   bounds []     = bounds
-narrowDown' chs bounds (x:xs) = narrowDown' chs bounds' xs
-  where bounds' = half chs bounds x
+-- boarding pass seat ID
+seatID :: BPass -> SeatID
+seatID bp = binToInt binstr
+  where binstr  = map (\c -> if (c == 'B' || c == 'R') then '1' else '0') bp
 
-narrowDown :: (Char,Char) -> String -> Int
-narrowDown chs xs = fst $ narrowDown' chs (0,hi) xs
-  where hi  = 2 ^ (length xs) - 1
-
-seat :: BPass -> (Row,Col)
-seat bp = (row,col)
-  where rowstr  = take 7 bp
-        colstr  = drop 7 bp
-        row     = narrowDown ('F','B') rowstr
-        col     = narrowDown ('L','R') colstr
-
-seatID :: (Row,Col) -> SeatID
-seatID (r,c) = r*8+c
-
-isMySeat :: [SeatID] -> SeatID -> Bool
-isMySeat sids sid   = emptySeat && neighbours
-  where emptySeat   = not $ sid `elem` sids
-        neighbours  = (sid-1) `elem` sids && (sid+1) `elem` sids
+-- needs seat ids to be sorted, finds first missing seat
+findMySeat :: [SeatID] -> SeatID
+findMySeat (x:xs)
+  | x+1 == head xs  = findMySeat xs
+  | otherwise       = x + 1
 
 main = do
-  passes <- lines <$> readFile "input5.txt"
+  ids <- map seatID <$> lines <$> readFile "input5.txt"
 
   -- Part One --
-  let ids = map (seatID . seat) passes
   print $ maximum ids
 
   -- Part Two --
-  print $ head $ dropWhile (not . isMySeat ids) [2..]
+  print $ findMySeat $ sort ids
