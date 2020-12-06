@@ -5,12 +5,13 @@ type Group  = [String]
 
 -- count each 'yes' answer
 countDistinct :: Group -> Int
-countDistinct g = length $ nub $ concat g
+countDistinct = length . nub . concat
 
 -- count answers where all answered 'yes'
 countAll :: Group -> Int
-countAll g = length $ filter (\i -> length i == n) $ group $ sort $ concat g
-  where n = length g
+countAll g = length $ filter allyes $ group $ sort $ concat g
+  where numppl  = length g
+        allyes  = (\anss -> length anss == numppl)
 
 main = do
   groups <- map lines <$> splitOn "\n\n" <$> readFile "input6.txt"
