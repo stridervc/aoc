@@ -2,26 +2,14 @@
 
 -- Parsec tutorial: https://www.cnblogs.com/ncore/p/6892500.html
 
-import Data.List.Split (splitOn)
-import Data.Either (rights)
-
 import qualified Text.Parsec as Parsec
 import Text.Parsec ((<|>))
+import Text.Parsec.String (Parser)
 
 type Bag    = String
 type Count  = Int
 type Rule   = (Bag, [(Count,Bag)])
 type Rules  = [Rule]
-
-{- example rules
- - mirrored violet bags contain 1 bright beige bag.
- - dim olive bags contain no other bags.
- - striped crimson bags contain 1 pale orange bag, 5 dim white bags, 3 clear fuchsia bags.
- -}
-
--- convenience type
--- Parse a String, no state, and return type a
-type Parser a = Parsec.Parsec String () a
 
 -- a bag is word space word ++ " bag(s)", eg "faded tomato bags"
 bagParser :: Parser Bag
@@ -29,8 +17,7 @@ bagParser = do
   part1 <- Parsec.many1 Parsec.letter
   Parsec.space
   part2 <- Parsec.many1 Parsec.letter
-  Parsec.space
-  Parsec.string "bag"
+  Parsec.string " bag"
   Parsec.many $ Parsec.char 's' -- 0 or more 's'
   return $ part1 ++ " " ++ part2
 
@@ -57,9 +44,7 @@ contentsParser = do
 ruleParser :: Parser Rule
 ruleParser = do
   bag <- bagParser
-  Parsec.spaces
-  Parsec.string "contain"
-  Parsec.spaces
+  Parsec.string " contain "
   contents <- contentsParser
   Parsec.char '.'
   return (bag, contents)
@@ -85,17 +70,11 @@ canEventuallyContain rules bag container =
 
 -- number of bags that eventually go into this bag
 countEventualContents :: Rules -> Bag -> Count
-countEventualContents rules bag = dc + cec
+countEventualContents rules bag = dc + countec
   where contents    = bagContents rules bag
         dc          = sum $ map fst contents
         mulcount cb = (fst cb) * countEventualContents rules (snd cb)
-        cec         = sum $ map mulcount contents
-
--- convenience function
--- "(input)" is a string used for error reporting by Parsec
--- useful if you're parsing multiple files, to see in which file the parsing problem is
--- we, however, are only parsing one file, so we conveniently keep it constant
-parse rule text = Parsec.parse rule "(input)" text
+        countec     = sum $ map mulcount contents
 
 -- part 1 : how many of all bags can eventually contain at least 1 "shiny gold" bag
 part1 :: Rules -> Count
@@ -110,7 +89,7 @@ part2 rules = countEventualContents rules "shiny gold"
 main = do
   rulestxt <- lines <$> readFile "input7.txt"
 
-  let rules = rights $ map (parse ruleParser) rulestxt
+  let Right rules = traverse (Parsec.parse ruleParser "(input)") rulestxt
 
   print $ part1 rules
   print $ part2 rules
