@@ -16,7 +16,7 @@ type Rule   = (Bag, [(Count,Bag)])
  - striped crimson bags contain 1 pale orange bag, 5 dim white bags, 3 clear fuchsia bags.
  -}
 
--- a bag is word space word "bag(s)", eg "faded tomato bags"
+-- a bag is word space word ++ " bag(s)", eg "faded tomato bags"
 bagParser :: Parsec.Parsec String () Bag
 bagParser = do
   part1 <- Parsec.many1 Parsec.letter
@@ -36,15 +36,15 @@ countBagParser = do
   return (read count, bag)
 
 -- comma separated, spaces are ok
-separator :: Parsec.Parsec String () ()
-separator = Parsec.spaces >> Parsec.char ',' >> Parsec.spaces
+separatorParser :: Parsec.Parsec String () ()
+separatorParser = Parsec.spaces >> Parsec.char ',' >> Parsec.spaces
 
 -- either "no other bags" or comma separated list of numbers and bags
 contentsParser :: Parsec.Parsec String () [(Count,Bag)]
 contentsParser = do
   Parsec.string "no other bags" >> return []
   <|>
-  Parsec.sepBy countBagParser separator
+  Parsec.sepBy countBagParser separatorParser
 
 -- a rule is: bag "contain" contents
 ruleParser :: Parsec.Parsec String () Rule
@@ -57,25 +57,28 @@ ruleParser = do
   return (bag, contents)
 
 -- convenience function
-parse rule text = Parsec.parse rule "input7.txt" text
+parse rule text = Parsec.parse rule "(input)" text
 
--- all bags that a bag can directly contain
-bagContents :: [Rule] -> Bag -> [Bag]
-bagContents rules bag = map snd crules
-  where Just crules = lookup bag rules
+-- all bags and their counts, that a bag can directly contain
+bagContents :: [Rule] -> Bag -> [(Count,Bag)]
+bagContents rules bag = concat $ lookup bag rules
 
--- using given rules, can bag contain bag
-canContain :: [Rule] -> Bag -> Bag -> Bool
-canContain rules container containee = containee `elem` contents
+-- using given rules, how many of bag can container directly contain
+canContain :: [Rule] -> Bag -> Bag -> Count
+canContain rules bag container = sum counts
   where contents  = bagContents rules container
+        counts    = map fst $ filter (\cb -> snd cb == bag) contents
 
-canEventuallyContain :: [Rule] -> Bag -> Bag -> Bool
-canEventuallyContain rules container containee
-  | can       = True
-  | otherwise = and $ map cec contents
-  where can       = canContain rules container containee
-        contents  = bagContents rules container
-        cec       = (\c -> canEventuallyContain rules c containee)
+-- how many of bag can container eventually contain
+canEventuallyContain :: [Rule] -> Bag -> Bag -> Count
+canEventuallyContain rules bag container =
+  dc + (sum $ map subcontain contents)
+  where dc          = canContain rules bag container
+        contents    = bagContents rules container
+        subcontain  = (\cb -> (fst cb) * canEventuallyContain rules bag (snd cb))
+
+countNotZero :: [Int] -> Int
+countNotZero = length . filter (/=0)
 
 main = do
   rulestxt <- lines <$> readFile "input7.txt"
@@ -83,5 +86,8 @@ main = do
   let rules = rights $ map (parse ruleParser) rulestxt
   let bags  = map fst rules
 
-  print $ canEventuallyContain rules "striped crimson" "pale orange"
-  -- TODO instead of bool can contain, return how many of that bag it can contain
+  -- Part One --
+  print $ countNotZero $ map (canEventuallyContain rules "shiny gold") bags
+
+  -- Part Two --
+
