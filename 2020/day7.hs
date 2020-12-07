@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
+-- Parsec tutorial: https://www.cnblogs.com/ncore/p/6892500.html
+
 import Data.List.Split (splitOn)
 import Data.Either (rights)
 
