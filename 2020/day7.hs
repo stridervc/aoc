@@ -1,10 +1,8 @@
-{-# LANGUAGE FlexibleContexts #-}
-
--- Parsec tutorial: https://www.cnblogs.com/ncore/p/6892500.html
-
 import qualified Text.Parsec as Parsec
 import Text.Parsec ((<|>))
 import Text.Parsec.String (Parser)
+
+-- Parsec tutorial: https://www.cnblogs.com/ncore/p/6892500.html
 
 type Bag    = String
 type Count  = Int
