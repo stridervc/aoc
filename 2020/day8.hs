@@ -4,7 +4,8 @@ import Text.Parsec.String (Parser)
 
 import qualified Data.Map as M
 
-data Operation = Nop | Acc | Jmp deriving (Eq, Show)
+data Operation    = Nop | Acc | Jmp deriving (Eq, Show)
+data MachineExit  = Busy | Duplicate | Terminate deriving (Eq, Show)
 
 type Instruction = (Operation,Int)
 
@@ -65,13 +66,15 @@ execInstr m (op,arg)
   where ip'       = ip m
         acc'      = acc m
 
--- execute one instruction on machine, unless it has already
--- been executed, in which case, return false
-step :: MachineState -> (Bool, MachineState)
+-- execute one instruction on machine
+-- return exit status and machine state
+step :: MachineState -> (MachineExit, MachineState)
 step m
-  | duplicate = (False, m)
-  | otherwise = (True, m')
+  | duplicate = (Duplicate, m)
+  | ip' >= n  = (Terminate, m)
+  | otherwise = (Busy, m')
   where duplicate = lookupBool ip' visited'
+        n         = length $ mem m
         ip'       = ip m
         visited'  = visited m
         instr'    = mem m !! ip'
@@ -79,16 +82,35 @@ step m
         m'        = execInstr m'' instr'
 
 -- run a machine until it's about to execute an instruction for
--- the 2nd time, return with last machine state
-run :: MachineState -> MachineState
+-- the 2nd time, or terminates normally
+run :: MachineState -> (MachineExit,MachineState)
 run m
-  | not success = m
-  | otherwise   = run m'
-  where (success,m')  = step m
+  | exit == Busy  = run m'
+  | otherwise     = (exit,m)
+  where (exit,m')  = step m
+
+flipInstr :: Instruction -> Instruction
+flipInstr (op,arg)
+  | op  == Nop  = (Jmp,arg)
+  | op  == Jmp  = (Nop,arg)
+  | otherwise   = (op, arg)
+
+-- flip instr at pos from jmp to nop or nop to jmp
+flipPos :: MachineState -> Int -> MachineState
+flipPos m i = m { mem = flipped }
+  where mem'    = mem m
+        instr'  = mem' !! i
+        flipped = take i mem' ++ [flipInstr instr'] ++ drop (i+1) mem'
+
+-- fix machine by changing a nop to a jmp, or a jmp to a nop
+-- run it as well
+fix :: MachineState -> (MachineExit,MachineState)
+fix m = head $ dropWhile (\em -> fst em /= Terminate) $ map (run . flipPos m) [0..]
 
 main = do
   contents <- lines <$> readFile "input8.txt"
 
   let Right instrs = traverse (Parsec.parse instrParser "(input)") contents
 
-  print $ acc $ run $ loadMachine newMachine instrs
+  print $ (acc . snd) $ run $ loadMachine newMachine instrs
+  print $ (acc . snd) $ fix $ loadMachine newMachine instrs
