@@ -13,7 +13,7 @@ data MachineState = MachineState
   { acc     :: Int
   , ip      :: Int
   , mem     :: [Instruction]
-  , visited :: M.Map Int Bool
+  , visited :: M.Map Int Bool   -- map of which memory locations have been executed
   } deriving (Eq, Show)
 
 opParser :: Parser Operation
@@ -50,14 +50,15 @@ newMachine = MachineState
 
 -- load machine memory from list of instructions
 loadMachine :: MachineState -> [Instruction] -> MachineState
-loadMachine m is = m { mem = is }
+loadMachine m instrs = m { mem = instrs }
 
--- convenience boolean lookup
+-- convenience boolean lookup from map
 lookupBool k m = case M.lookup k m of
   Nothing -> False
   Just v  -> v
 
--- execute instruction on machine
+-- execute arbitrary instruction on machine (not from memory),
+-- registers (ip,acc) are updated
 execInstr :: MachineState -> Instruction -> MachineState
 execInstr m (op,arg)
   | op  == Nop  = m { ip = ip' + 1 }
@@ -66,8 +67,8 @@ execInstr m (op,arg)
   where ip'       = ip m
         acc'      = acc m
 
--- execute one instruction on machine
--- return exit status and machine state
+-- execute one instruction from memory on machine
+-- return exit status and new machine state
 step :: MachineState -> (MachineExit, MachineState)
 step m
   | duplicate = (Duplicate, m)
@@ -82,15 +83,15 @@ step m
         m'        = execInstr m'' instr'
 
 -- run a machine until it's about to execute an instruction for
--- the 2nd time, or terminates normally
-run :: MachineState -> (MachineExit,MachineState)
+-- the second time, or terminates normally
+run :: MachineState -> (MachineExit, MachineState)
 run m
   | exit == Busy  = run m'
   | otherwise     = (exit,m)
-  where (exit,m')  = step m
+  where (exit,m') = step m
 
-flipInstr :: Instruction -> Instruction
-flipInstr (op,arg)
+flipNopJmp :: Instruction -> Instruction
+flipNopJmp (op,arg)
   | op  == Nop  = (Jmp,arg)
   | op  == Jmp  = (Nop,arg)
   | otherwise   = (op, arg)
@@ -100,17 +101,18 @@ flipPos :: MachineState -> Int -> MachineState
 flipPos m i = m { mem = flipped }
   where mem'    = mem m
         instr'  = mem' !! i
-        flipped = take i mem' ++ [flipInstr instr'] ++ drop (i+1) mem'
+        flipped = take i mem' ++ [flipNopJmp instr'] ++ drop (i+1) mem'
 
 -- fix machine by changing a nop to a jmp, or a jmp to a nop
--- run it as well
-fix :: MachineState -> (MachineExit,MachineState)
+-- return first machine state that terminates normally
+fix :: MachineState -> (MachineExit, MachineState)
 fix m = head $ dropWhile (\em -> fst em /= Terminate) $ map (run . flipPos m) [0..]
 
 main = do
   contents <- lines <$> readFile "input8.txt"
 
   let Right instrs = traverse (Parsec.parse instrParser "(input)") contents
+  let m = loadMachine newMachine instrs
 
-  print $ (acc . snd) $ run $ loadMachine newMachine instrs
-  print $ (acc . snd) $ fix $ loadMachine newMachine instrs
+  print $ (acc . snd) $ run m
+  print $ (acc . snd) $ fix m
