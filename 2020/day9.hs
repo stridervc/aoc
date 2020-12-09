@@ -1,16 +1,15 @@
 import Data.List (tails)
 
 -- take a number and a list of numbers
--- the number is valid if two of the numbers from the list add up to it
-valid :: Int -> [Int] -> Bool
-valid n ns = not $ null [(x,y) | (x:ys) <- tails ns, y <- ys, x+y==n]
+-- the number is valid if any two of the numbers from the list add up to it
+valid :: [Int] -> Int -> Bool
+valid ns n = not $ null [(x,y) | (x:ys) <- tails ns, y <- ys, x+y==n]
 
--- check if number at pos i of list is valid, considering preamble
--- numbers before it
+-- check if number at pos i of list is valid, considering
+-- preamble numbers before it
 validAtPos :: [Int] -> Int -> Int -> Bool
-validAtPos ns preamble i = valid n ns'
-  where n   = ns!!i
-        ns' = take preamble $ reverse $ take i ns
+validAtPos ns preamble i = valid ns' $ ns!!i
+  where ns' = take preamble $ reverse $ take i ns
 
 -- find the first invalid number in the list, using preamble
 firstInvalid :: [Int] -> Int -> Int
@@ -20,9 +19,9 @@ firstInvalid ns preamble = head $ [ns!!i | i <- [preamble..], not $ validAtPos n
 subsets :: [Int] -> Int -> [[Int]]
 subsets ns n = map ssf drops
   where drops = [0..length ns - n]
-        ssf   = (\i -> take n $ drop i ns)
+        ssf x = take n $ drop x ns
 
--- find the first set of contiguous numbers in list that add up to n
+-- find the first subset of contiguous numbers in list that add up to n
 findSet :: [Int] -> Int -> [Int]
 findSet ns n = head $ [ss | ss <- subsets', sum ss == n]
   where subsets'  = concat $ map (subsets ns) [2..]
