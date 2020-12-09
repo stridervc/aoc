@@ -14,8 +14,7 @@ validAtPos ns preamble i = valid n ns'
 
 -- find the first invalid number in the list, using preamble
 firstInvalid :: [Int] -> Int -> Int
-firstInvalid ns preamble = head $ [x | i <- poss, let x = ns!!i, validAtPos ns preamble i == False]
-  where poss  = enumFrom preamble
+firstInvalid ns preamble = head $ [ns!!i | i <- [preamble..], not $ validAtPos ns preamble i]
 
 -- return a list of overlapping contiguous subsets of input list, of length n each
 subsets :: [Int] -> Int -> [[Int]]
