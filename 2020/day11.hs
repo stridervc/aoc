@@ -1,6 +1,7 @@
 type Cell   = Char
 type Field  = [[Cell]]
 
+-- return list of neighbours to position
 neighbours :: Field -> (Int, Int) -> [Cell]
 neighbours field (x,y)
   | x == 0 && y == 0  = [ ce, cse, cs ]
@@ -25,9 +26,11 @@ neighbours field (x,y)
         cw            = cell (x-1, y  )
         cnw           = cell (x-1, y-1)
 
+-- count occupied seats neighbouring position
 occupiedNeighbours :: Field -> (Int, Int) -> Int
 occupiedNeighbours field pos = length $ filter (== '#') $ neighbours field pos
 
+-- replace cell at position
 replaceCell :: Field -> (Int, Int) -> Cell -> Field
 replaceCell field (x,y) cell = prerows ++ [precells ++ [cell] ++ postcells] ++ postrows
   where prerows   = take y field
@@ -35,8 +38,8 @@ replaceCell field (x,y) cell = prerows ++ [precells ++ [cell] ++ postcells] ++ p
         postcells = drop (x+1) $ field !! y
         postrows  = drop (y+1) field
 
--- pass it an original field to keep unchanged
--- and a 'writeable' field
+-- pass it an original field to read from,
+-- and a 'writeable' field that may change
 -- returns the same
 iterCell :: (Field, Field) -> (Int, Int) -> (Field, Field)
 iterCell (rfield,wfield) (x,y)
@@ -46,12 +49,14 @@ iterCell (rfield,wfield) (x,y)
   where c   = rfield !! y !! x
         oc  = occupiedNeighbours rfield (x,y)
 
+-- do one iteration of whole field
 iterField :: Field -> Field
 iterField field = snd $ foldl iterCell (field, field) poss
   where poss  = [(x,y) | x <- [0..w], y <- [0..h]]
         w     = length (head field) - 1
         h     = length field - 1
 
+-- keep iterating field until it doesn't change
 iterUntilStable :: Field -> Field
 iterUntilStable field
   | field == field' = field
