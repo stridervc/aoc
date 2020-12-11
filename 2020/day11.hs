@@ -8,6 +8,7 @@ type Direction  = (Int, Int)
 -- new field with the cell iterated
 type IterCellFunc = (Field, Field) -> Pos -> (Field, Field)
 
+-- part 1
 -- return list of neighbours for cell at position
 neighbours :: Field -> Pos -> [Cell]
 neighbours field (x,y)
@@ -63,11 +64,13 @@ neighbours2 field pos = [ cn, cne, ce, cse, cs, csw, cw, cnw ]
         cw  = nc (-1, 0 )
         cnw = nc (-1, -1)
 
+-- part 1
 -- count occupied seats neighbouring position
 occupiedNeighbours :: Field -> Pos -> Int
 occupiedNeighbours field pos = length $ filter (== '#') $ neighbours field pos
 
--- part 2 occupied neighbours
+-- part 2
+-- occupied neighbours
 occupiedNeighbours2 :: Field -> Pos -> Int
 occupiedNeighbours2 field pos = length $ filter (== '#') $ neighbours2 field pos
 
@@ -79,6 +82,7 @@ replaceCell field (x,y) cell = prerows ++ [precells ++ [cell] ++ postcells] ++ p
         postcells = drop (x+1) $ field !! y
         postrows  = drop (y+1) field
 
+-- part 1
 -- pass an original field to read from,
 -- and a 'writeable' field that may change
 -- returns the same
@@ -90,7 +94,7 @@ iterCell (rfield,wfield) (x,y)
   where c   = rfield !! y !! x
         oc  = occupiedNeighbours rfield (x,y)
 
--- part 2 iterCell
+-- part 2
 iterCell2 :: IterCellFunc
 iterCell2 (rfield,wfield) (x,y)
   | c == 'L' && oc == 0 = (rfield, replaceCell wfield (x,y) '#')
