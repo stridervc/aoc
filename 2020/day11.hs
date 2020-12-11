@@ -54,14 +54,14 @@ firstSeat field (x,y) (dx,dy)
 neighbours2 :: Field -> Pos -> [Cell]
 neighbours2 field pos = [ cn, cne, ce, cse, cs, csw, cw, cnw ]
   where nc  = firstSeat field pos
-        cn  = nc ( 0, -1)
-        cne = nc ( 1, -1)
-        ce  = nc ( 1, 0 )
-        cse = nc ( 1, 1 )
-        cs  = nc ( 0, 1 )
-        csw = nc (-1, 1 )
-        cw  = nc (-1, 0 )
-        cnw = nc (-1, -1)
+        cn  = nc ( 0, -1 )
+        cne = nc ( 1, -1 )
+        ce  = nc ( 1, 0  )
+        cse = nc ( 1, 1  )
+        cs  = nc ( 0, 1  )
+        csw = nc (-1, 1  )
+        cw  = nc (-1, 0  )
+        cnw = nc (-1, -1 )
 
 -- count occupied seats neighbouring position
 occupiedNeighbours :: Field -> Pos -> Int
