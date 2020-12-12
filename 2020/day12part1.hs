@@ -6,6 +6,7 @@ data Ship = Ship
   , direction :: Int
   } deriving (Eq, Show)
 
+-- ship at starting position
 newShip :: Ship
 newShip =
   Ship  { posx  = 0
@@ -13,6 +14,7 @@ newShip =
         , direction = 90
         }
 
+-- apply a single instruction to ship
 applyInstruction :: Ship -> Instruction -> Ship
 applyInstruction ship instruction
   | instr == 'N'  = ship { posy = y - arg }
@@ -32,9 +34,11 @@ applyInstruction ship instruction
         y     = posy ship
         dir   = direction ship
 
+-- apply list of instructions to ship
 apply :: Ship -> [Instruction] -> Ship
 apply = foldl applyInstruction
 
+-- calculate manhattan distance between two ships
 distance :: Ship -> Ship -> Int
 distance a b = abs (posx a) - abs (posx b) + abs (posy a) - abs (posy b)
 

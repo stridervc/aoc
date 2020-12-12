@@ -7,6 +7,7 @@ data Ship = Ship
   , wayy  :: Int
   } deriving (Eq, Show)
 
+-- ship in starting position
 newShip :: Ship
 newShip =
   Ship  { posx  = 0
@@ -25,6 +26,7 @@ rotateCW :: Ship -> Int -> Ship
 rotateCW ship 1 = rotateCCW ship 3
 rotateCW ship c = rotateCW (rotateCW ship 1) (c-1)
 
+-- apply a single instruction to ship
 applyInstruction :: Ship -> Instruction -> Ship
 applyInstruction ship instruction
   | instr == 'N'  = ship { wayy = wy - arg }
@@ -41,9 +43,11 @@ applyInstruction ship instruction
         wx    = wayx ship
         wy    = wayy ship
 
+-- apply list of instructions to ship
 apply :: Ship -> [Instruction] -> Ship
 apply = foldl applyInstruction
 
+-- calculate manhattan distance between two ships
 distance :: Ship -> Ship -> Int
 distance a b = abs (posx a) - abs (posx b) + abs (posy a) - abs (posy b)
 
