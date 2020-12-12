@@ -40,7 +40,7 @@ apply = foldl applyInstruction
 
 -- calculate manhattan distance between two ships
 distance :: Ship -> Ship -> Int
-distance a b = abs (posx a) - abs (posx b) + abs (posy a) - abs (posy b)
+distance a b = abs $ abs (posx a) - abs (posx b) + abs (posy a) - abs (posy b)
 
 main :: IO ()
 main = do

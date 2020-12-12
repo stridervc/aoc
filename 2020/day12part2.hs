@@ -34,7 +34,7 @@ applyInstruction ship instruction
   | instr == 'E'  = ship { wayx = wx + arg }
   | instr == 'W'  = ship { wayx = wx - arg }
   | instr == 'L'  = rotateCCW ship (arg `div` 90)
-  | instr == 'R'  = rotateCW ship (arg `div` 90)
+  | instr == 'R'  = rotateCW  ship (arg `div` 90)
   | instr == 'F'  = ship { posx = x + arg * wx, posy = y + arg * wy }
   where instr = head instruction
         arg   = read $ tail instruction
@@ -49,7 +49,7 @@ apply = foldl applyInstruction
 
 -- calculate manhattan distance between two ships
 distance :: Ship -> Ship -> Int
-distance a b = abs (posx a) - abs (posx b) + abs (posy a) - abs (posy b)
+distance a b = abs $ abs (posx a) - abs (posx b) + abs (posy a) - abs (posy b)
 
 main :: IO ()
 main = do
