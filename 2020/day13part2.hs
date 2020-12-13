@@ -1,39 +1,42 @@
 import Data.List.Split (splitOn)
 import Data.Maybe (catMaybes)
-import Data.List (elemIndex)
 
 type Bus  = Maybe Integer
 type Time = Integer
 
 parseInput :: String -> [Bus]
-parseInput input = busses
+parseInput input  = map (\b -> if b == "x" then Nothing else Just $ read b) $ splitOn "," busline
   where input'    = lines input
-        busses    = map (\b -> if b == "x" then Nothing else Just $ read b) $ splitOn "," $ head $ tail input'
+        busline   = input'!!1
 
-schedule :: Bus -> [Time]
-schedule Nothing    = []
-schedule (Just bus) = iterate (+bus) 0
-
+-- will this bus depart at this time?
 busDepartsAt :: Bus -> Time -> Bool
 busDepartsAt Nothing    _ = True
 busDepartsAt (Just bus) t = t `mod` bus == 0
 
-validStaggered :: [Bus] -> Integer -> Time -> Bool
-validStaggered []     _      _  = True
-validStaggered (b:bs) offset t  = busDepartsAt b (t-offset) && validStaggered bs offset (t+1)
+-- give a list of buses and a time
+-- returns true iff bus 0 departs at time, and bus 1 departs at time + 1, etc
+validStaggered :: [Bus] -> Time -> Bool
+validStaggered []     _ = True
+validStaggered (b:bs) t = busDepartsAt b t && validStaggered bs (t+1)
 
--- get position in list of slowest bus
-slowestBus :: [Bus] -> (Integer, Bus)
-slowestBus busses = (toInteger pos, Just bus)
-  where bus       = maximum $ catMaybes busses
-        Just pos  = elemIndex (Just bus) busses
+-- give list of buses, a time to start at, an amount to increment by and a count of
+-- how many buses from the list to use
+-- gives back a new start time and increment (product of buses)
+solve :: [Bus] -> (Time, Integer) -> Int -> (Time, Integer)
+solve buses (start, incr) count  = (newstart, newincr)
+  where buses'    = take count buses
+        potential = iterate (+incr) start
+        newstart  = head [t | t <- potential, validStaggered buses' t]
+        newincr   = product $ catMaybes buses'
 
+-- start with first 2 buses and 0, 1 for start and incr
+-- find a new start and incr
+-- go on to 3 buses with new start and incr
+-- until all buses, then answer is start
 part2 :: [Bus] -> Integer
-part2 busses = snd (head $ dropWhile (not . fst) vsst) - pos
-  where (pos, bus)  = slowestBus busses
-        potential   = schedule bus
-        vss         = map (validStaggered busses pos) potential
-        vsst        = zip vss potential
+part2 buses = fst $ foldl (solve buses) (0,1) [2..n]
+  where n   = length buses
 
 main :: IO ()
 main = do
