@@ -7,6 +7,7 @@ import System.Console.ANSI
 import Control.Monad (void)
 import System.CPUTime (getCPUTime)
 import Text.Printf (printf)
+import Control.DeepSeq (deepseq, NFData)
 
 putBoldColor :: Color -> String -> IO ()
 putBoldColor color s = do
@@ -15,7 +16,7 @@ putBoldColor color s = do
           ]
   putStr s
   setSGR  [ Reset ]
-  
+
 putNormalColor :: Color -> String -> IO ()
 putNormalColor color s = do
   setSGR  [ SetConsoleIntensity NormalIntensity
@@ -52,13 +53,13 @@ prettyTime t
         pico  = fromIntegral t :: Double
         micro = pico / (10^6)
 
-performTest :: (Eq b, Show b) => (a->b) -> (a, b) -> IO Bool
+performTest :: (Eq b, Show b, NFData b) => (a->b) -> (a, b) -> IO Bool
 performTest func (input, output) = do
   putYellow " * "
 
   start <- getCPUTime
   let result = func input
-  end <- getCPUTime
+  end <- result `deepseq` getCPUTime
 
   if result == output then do
     putSuccess
@@ -73,7 +74,7 @@ performTest func (input, output) = do
   return $ result == output
 
 -- only run actual calculation if all tests pass
-testAndRun :: (Eq b, Show b) => (a->b) -> [(a, b)] -> a -> IO (Maybe b)
+testAndRun :: (Eq b, Show b, NFData b) => (a->b) -> [(a, b)] -> a -> IO (Maybe b)
 testAndRun func tests actuali
   = do
     putStrLn "Running tests..."
@@ -84,7 +85,7 @@ testAndRun func tests actuali
       putStrLn "Running actual calculation..."
       start <- getCPUTime
       let result = func actuali
-      end <- getCPUTime
+      end <- result `deepseq` getCPUTime
 
       putNormal "Result in "
       putYellow $ prettyTime $ end - start
