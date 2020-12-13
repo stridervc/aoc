@@ -77,12 +77,16 @@ performTest func (input, output) = do
 testAndRun :: (Eq b, Show b, NFData b) => (a->b) -> [(a, b)] -> a -> IO (Maybe b)
 testAndRun func tests actuali
   = do
-    putStrLn "Running tests..."
+    if not $ null tests then
+      putStrLn "Running tests..."
+    else
+      putStrLn "No tests"
+
     results <- mapM (performTest func) tests
     putStrLn ""
 
     if and results then do
-      putStrLn "Running actual calculation..."
+      putStrLn "Calculating..."
       start <- getCPUTime
       let result = func actuali
       end <- result `deepseq` getCPUTime
