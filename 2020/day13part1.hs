@@ -1,6 +1,8 @@
 import Data.List.Split (splitOn)
 import Data.List (sortOn)
 
+import AoC
+
 type Bus  = Int
 type Time = Int
 
@@ -24,6 +26,7 @@ part1 (earliest, busses) = (bustime - earliest) * bus
 
 main :: IO ()
 main = do
-  input <- parseInput <$> readFile "input13.txt"
+  example <- parseInput <$> readFile "example13.txt"
+  input   <- parseInput <$> readFile "input13.txt"
 
-  print $ part1 input
+  testAndRun_ part1 [(example,295)] input
