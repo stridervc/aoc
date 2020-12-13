@@ -1,6 +1,8 @@
 import Data.List.Split (splitOn)
 import Data.Maybe (catMaybes)
 
+import AoC
+
 type Bus  = Maybe Integer
 type Time = Integer
 
@@ -30,6 +32,7 @@ solve buses (start, incr) count  = (newstart, newincr)
         newstart  = head [t | t <- potential, validStaggered buses' t]
         newincr   = product $ catMaybes buses'
 
+-- Thanks to Roland for this algorithm
 -- start with first 2 buses and 0, 1 for start and incr
 -- find a new start and incr
 -- go on to 3 buses with new start and incr
@@ -40,6 +43,7 @@ part2 buses = fst $ foldl (solve buses) (0,1) [2..n]
 
 main :: IO ()
 main = do
-  input <- parseInput <$> readFile "input13.txt"
+  example <- parseInput <$> readFile "example13.txt"
+  input   <- parseInput <$> readFile "input13.txt"
 
-  print $ part2 input
+  testAndRun_ part2 [(example, 1068781)] input
