@@ -61,14 +61,14 @@ performTest func (input, output) = do
   let result = func input
   end <- result `deepseq` getCPUTime
 
-  if result == output then do
+  if result == output then
     putSuccess
-    putWhite $ show result
-    putNormal " in "
-    putYellow $ prettyTime $ end - start
-  else do
+  else
     putFailure
-    putRed $ show result
+
+  putWhite $ show result
+  putNormal " in "
+  putYellow $ prettyTime $ end - start
 
   putStrLn ""
   return $ result == output
