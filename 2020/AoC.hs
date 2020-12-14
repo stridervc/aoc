@@ -53,6 +53,12 @@ prettyTime t
         pico  = fromIntegral t :: Double
         micro = pico / (10^6)
 
+putResultAndTime result time = do
+  putWhite $ show result
+  putNormal " ("
+  putYellow $ prettyTime time
+  putNormal ")"
+
 performTest :: (Eq b, Show b, NFData b) => (a->b) -> (a, b) -> IO Bool
 performTest func (input, output) = do
   putYellow " * "
@@ -66,9 +72,7 @@ performTest func (input, output) = do
   else
     putFailure
 
-  putWhite $ show result
-  putNormal " in "
-  putYellow $ prettyTime $ end - start
+  putResultAndTime result $ end - start
 
   putStrLn ""
   return $ result == output
@@ -91,11 +95,8 @@ testAndRun func tests actuali
       let result = func actuali
       end <- result `deepseq` getCPUTime
 
-      putNormal "Result in "
-      putYellow $ prettyTime $ end - start
       putStrLn ""
-      putStrLn ""
-      putWhite $ show result
+      putResultAndTime result $ end - start
       putStrLn ""
       return $ Just result
     else do
@@ -103,5 +104,6 @@ testAndRun func tests actuali
       putStrLn ""
       return Nothing
 
+-- don't care about return value
 testAndRun_ func tests actuali =
   void $ testAndRun func tests actuali
