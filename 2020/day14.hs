@@ -42,11 +42,13 @@ memParser = do
 instrParser :: Parser Instruction
 instrParser = P.try maskParser <|> memParser
 
+-- to 36bit binary as string
 toBinary :: Integer -> String
 toBinary num = replicate pad '0' ++ bin
   where bin = reverse $ unfoldr (\b -> if b == 0 then Nothing else Just (if b `mod` 2 == 0 then '0' else '1', b `div` 2)) num
         pad = 36 - length bin
 
+-- string representation of binary number to number
 toDecimal :: String -> Integer
 toDecimal s = foldr (\i acc -> if digit i == '1' then acc + 2^i else acc) 0 [0..length s - 1]
   where digit i = reverse s !! i
@@ -56,23 +58,19 @@ applyMask1 :: Mask -> Integer -> Integer
 applyMask1 mask num = toDecimal $ map (\i -> if mask!!i == 'X' then bin!!i else mask!!i) [0..length mask - 1]
   where bin = toBinary num
 
--- change all Xs to 0s
-allZeroes :: Mask -> Mask
-allZeroes = map (\c -> if c == 'X' then '0' else c)
-
 -- for the masked number, and the current number
 -- give the next number in sequence
-unrollMasked :: Mask -> Mask -> Mask
-unrollMasked []       []        = []
-unrollMasked ('X':ms) ('0':ns)  = '1' : ns
-unrollMasked ('X':ms) ('1':ns)  = '0' : unrollMasked ms ns
-unrollMasked (_  :ms) (n  :ns)  = n   : unrollMasked ms ns
+nextMasked :: Mask -> Mask -> Mask
+nextMasked []       []        = []
+nextMasked ('X':ms) ('0':ns)  = '1' : ns
+nextMasked ('X':ms) ('1':ns)  = '0' : nextMasked ms ns
+nextMasked (_  :ms) (n  :ns)  = n   : nextMasked ms ns
 
 allUnrolled :: Mask -> [Mask]
-allUnrolled masked = start : unfoldr (\b -> if b == zeroed then Nothing else Just (unroll b, unroll b)) start
-  where zeroed  = allZeroes masked
-        unroll  = unrollMasked masked
-        start   = unroll zeroed
+allUnrolled masked = start : unfoldr (\b -> if b == zeroed then Nothing else Just (nextm b, nextm b)) start
+  where zeroed  = map (\c -> if c == 'X' then '0' else c) masked
+        nextm   = nextMasked masked
+        start   = nextm zeroed
 
 -- part 2
 applyMask2 :: Mask -> Integer -> [Integer]
@@ -93,27 +91,15 @@ applyInstr2 m (SetMem (i,v)) = m { mem  = mem' }
   where is    = applyMask2 (mask m) i
         mem'  = foldl (\m i -> M.insert i v m) (mem m) is
 
--- part 1
-applyInstrs1 :: MachineState -> [Instruction] -> MachineState
-applyInstrs1 = foldl applyInstr1
-
--- part 2
-applyInstrs2 :: MachineState -> [Instruction] -> MachineState
-applyInstrs2 = foldl applyInstr2
-
-part1 :: [Instruction] -> Integer
-part1 is = sum values
-  where machine = applyInstrs1 newMachine is
+-- solve using given applyInstr function
+solve applyInstr is = sum values
+  where machine = foldl applyInstr newMachine is
         memory  = mem machine
         keys    = M.keys memory
         values  = mapMaybe (`M.lookup` memory) keys
 
-part2 :: [Instruction] -> Integer
-part2 is = sum values
-  where machine = applyInstrs2 newMachine is
-        memory  = mem machine
-        keys    = M.keys memory
-        values  = mapMaybe (`M.lookup` memory) keys
+part1 = solve applyInstr1
+part2 = solve applyInstr2
 
 main :: IO ()
 main = do
