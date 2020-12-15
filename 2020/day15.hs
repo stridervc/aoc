@@ -11,7 +11,7 @@ data Game = Game
 newGame :: [Int] -> Game
 newGame nums =
   Game  { latest  = last nums
-        , memo    = M.fromList $! zip (init nums) [0..]
+        , memo    = M.fromList $ zip (init nums) [0..]
         , numlen  = length nums - 1
         }
 
