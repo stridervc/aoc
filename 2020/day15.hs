@@ -2,36 +2,32 @@ import AoC
 
 import Data.List (elemIndex)
 
-import qualified Data.Map.Strict as M
+import qualified Data.Map as M
 
 type Memo = M.Map Int Int
 
 data Game = Game
-  { numbers :: [Int]
-  , latest  :: Int
+  { latest  :: Int
   , memo    :: M.Map Int Int
   , numlen  :: Int
   } deriving (Eq, Show)
 
 newGame :: [Int] -> Game
 newGame nums =
-  Game  { numbers = reverse $ init nums
-        , latest  = last nums
+  Game  { latest  = last nums
         , memo    = M.fromList $ zip (init nums) [0..]
         , numlen  = length nums - 1
         }
 
 next :: Game -> Game
 next game =
-  Game  { numbers = latest' : xs
-        , latest  = nextnum
+  Game  { latest  = nextnum
         , memo    = newmemo
         , numlen  = len + 1
         }
   where memo'   = memo game
         latest' = latest game
         len     = numlen game
-        xs      = numbers game
         newmemo = M.insert latest' len memo'
         nextnum = case M.lookup latest' memo' of
           Nothing     -> 0
@@ -62,7 +58,11 @@ main = do
   putStrLn "Part 1"
   testAndRun_ part1 [(example1, 436), (example2, 1), (example3, 10)] input
 
+  print $ solve' 7 example1
+
+  {-
   putStrLn ""
   putStrLn "Part 2"
   print $ part2 input
   testAndRun_ part2 [(example1, 175594), (example2, 2578)] input
+  -}
