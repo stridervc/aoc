@@ -1,6 +1,9 @@
 module AoC
   ( testAndRun
   , testAndRun_
+  , startTimer
+  , printTimer
+  , printTimerLn
   ) where
 
 import System.Console.ANSI
@@ -107,3 +110,11 @@ testAndRun func tests actuali
 -- don't care about return value
 testAndRun_ func tests actuali =
   void $ testAndRun func tests actuali
+
+startTimer = getCPUTime
+
+printTimer start = do
+  end <- getCPUTime
+  putStr $ prettyTime $ end - start
+
+printTimerLn start = printTimer start >> putStrLn ""

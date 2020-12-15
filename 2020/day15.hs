@@ -56,7 +56,10 @@ main = do
 
   putStrLn ""
   putStrLn "Part 2"
+  start <- startTimer
   print $ part2 input
+  printTimerLn start
+
   {-
   testAndRun_ part2 [(example1, 175594), (example2, 2578)] input
   -}
