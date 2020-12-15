@@ -9,7 +9,7 @@ type Memo = M.Map Int Int
 next :: (Memo, [Int]) -> (Memo, [Int])
 next (memo, l@(x:xs)) =
   case M.lookup x memo of
-    Nothing     -> if isnew then (memo, 0 : l) else (memo', index+1 : l)
+    Nothing     -> if isnew then (memo', 0 : l) else (memo', index+1 : l)
     Just index  -> (memo', (length xs - index) : l)
     where isnew       = x `notElem` xs
           Just index  = x `elemIndex` xs
