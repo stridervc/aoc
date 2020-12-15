@@ -1,17 +1,17 @@
 import AoC
 
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 
 data Game = Game
-  { latest  :: Int
+  { latest  :: !Int
   , memo    :: M.Map Int Int
-  , numlen  :: Int
+  , numlen  :: !Int
   } deriving (Eq, Show)
 
 newGame :: [Int] -> Game
 newGame nums =
   Game  { latest  = last nums
-        , memo    = M.fromList $ zip (init nums) [0..]
+        , memo    = M.fromList $! zip (init nums) [0..]
         , numlen  = length nums - 1
         }
 
@@ -54,11 +54,9 @@ main = do
   putStrLn "Part 1"
   testAndRun_ part1 [(example1, 436), (example2, 1), (example3, 10)] input
 
-  print $ solve' 7 example1
-
-  {-
   putStrLn ""
   putStrLn "Part 2"
   print $ part2 input
+  {-
   testAndRun_ part2 [(example1, 175594), (example2, 2578)] input
   -}
