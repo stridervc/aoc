@@ -9,11 +9,9 @@ type Memo = M.Map Int Int
 next :: (Memo, [Int]) -> (Memo, [Int])
 next (memo, l@(x:xs)) =
   case M.lookup x memo of
-    Nothing     -> if isnew then (memo', 0 : l) else (memo', index+1 : l)
+    Nothing     -> (memo', 0 : l)
     Just index  -> (memo', (length xs - index) : l)
-    where isnew       = x `notElem` xs
-          Just index  = x `elemIndex` xs
-          memo'       = M.insert x (length xs) memo
+    where memo' = M.insert x (length xs) memo
 
 nextUntilLength :: Int -> (Memo, [Int]) -> (Memo, [Int])
 nextUntilLength len (memo, nums)
@@ -21,7 +19,9 @@ nextUntilLength len (memo, nums)
   | otherwise         = (memo, nums)
 
 solve' :: Int -> [Int] -> (Memo, [Int])
-solve' count nums = nextUntilLength count (M.empty, nums)
+solve' count nums = nextUntilLength count (memo, nums)
+  where memo    = M.fromList $ zip (tail nums) indexes
+        indexes = reverse [0..length nums - 2]
 
 solve :: Int -> [Int] -> Int
 solve count nums = head $ snd $ solve' count nums
