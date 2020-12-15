@@ -1,10 +1,6 @@
 import AoC
 
-import Data.List (elemIndex)
-
 import qualified Data.Map as M
-
-type Memo = M.Map Int Int
 
 data Game = Game
   { latest  :: Int
