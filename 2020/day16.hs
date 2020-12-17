@@ -74,7 +74,7 @@ satisfiesRule rule num = num `elem` range1 || num `elem` range2
         range2  = [fst r2range..snd r2range]
         r2range = snd rule !! 1
 
--- return list of rules that satisfies all these values
+-- return list of rules that satisfy all these values
 satisfiesAll :: [Rule] -> [Int] -> [Rule]
 satisfiesAll rules nums = [r | r <- rules, all (satisfiesRule r) nums]
 
@@ -92,7 +92,7 @@ removeRule r (x:xs)
   | otherwise = r : removeRule r xs
 
 data Solver = Solver
-  { nums    :: ![[Int]]
+  { tickets :: ![[Int]]
   , found   :: M.Map Int Rule
   , working :: ![Rule]
   , index   :: !Int
@@ -101,7 +101,7 @@ data Solver = Solver
 
 newSolver :: [Ticket] -> [Rule] -> Solver
 newSolver tickets rules = Solver
-  { nums    = transpose tickets
+  { tickets = filter (isValid rules) tickets
   , found   = mempty
   , working = rules
   , index   = 0
@@ -111,17 +111,32 @@ newSolver tickets rules = Solver
 step :: Solver -> Solver
 step solver
   | isJust  f = solver { index = newindex }
-  | otherwise = solver { found = newfound, working = newworking, index = newindex }
+  | otherwise = solver { found = newfound, working = newworking, tickets = newtickets, index = newindex }
   where i           = index solver
         f           = M.lookup i $ found solver
         newindex    = if i >= amount solver - 1 then 0 else i+1
-        foundrule   = findOneRule (nums solver !! i) (working solver)
+        nums        = transpose $ tickets solver
+        foundrule   = findOneRule (nums!!i) (working solver)
         newfound    = case foundrule of
                         Just rule -> M.insert i rule $ found solver
                         Nothing   -> found solver
         newworking  = case foundrule of
-                        Just rule -> removeRule rule (working solver)
+                        Just rule -> removeRule rule $ working solver
                         Nothing   -> working solver
+        newtickets  = case foundrule of
+                        Just rule -> filter (isValid $ working solver) (tickets solver)
+                        Nothing   -> tickets solver
+
+stepIO :: Solver -> IO Solver
+stepIO solver
+  | isSolved solver   = return solver
+  | index solver == 0 = do
+                          putStrLn $ "Num solved rules : " ++ show (length $ solvedRules solver)
+                          putStrLn $ "Num working rules : " ++ show (length $ working solver)
+                          putStrLn $ "Num tickets : " ++ show (length $ tickets solver)
+                          putStrLn ""
+                          stepIO $ step solver
+  | otherwise         = stepIO $ step solver
 
 solvedRules :: Solver -> [Rule]
 solvedRules = M.elems . found
@@ -134,14 +149,17 @@ solve solver
   | isSolved solver = solver
   | otherwise       = solve $ step solver
 
-part2' :: Input -> Solver
-part2' (rules, ticket, tickets) = solve $ newSolver tickets' rules
-  where tickets'  = filter (isValid rules) tickets
+solveIO :: Solver -> IO Solver
+solveIO solver
+  | isSolved solver = return solver
+  | otherwise       = stepIO solver >>= solveIO
+
+part2' :: Input -> IO Solver
+part2' (rules, ticket, tickets) = solveIO $ newSolver (ticket:tickets) rules
 
 part2 :: Input -> Int
-part2 (rules, ticket, tickets) = sum relevant
-  where tickets'    = filter (isValid rules) tickets
-        solved      = solve $ newSolver tickets' rules
+part2 (rules, ticket, tickets) = product relevant
+  where solved      = solve $ newSolver (ticket:tickets) rules
         solvedrules = solvedRules solved
         zipped      = zip solvedrules [0..]
         filtered    = filter (\(r,_) -> head (words (fst r)) == "departure") zipped
@@ -151,7 +169,7 @@ main :: IO ()
 main = do
   example1Input <- readFile "example16.txt"
   example2Input <- readFile "example16b.txt"
-  actualInput  <- readFile "input16.txt"
+  actualInput   <- readFile "input16.txt"
 
   let Right example1  = P.parse parseInput "(example16)"  example1Input
   let Right example2  = P.parse parseInput "(example16b)" example2Input
@@ -165,7 +183,7 @@ main = do
   putStrLn "Part 2"
   timer <- startTimer
 
-  print $ part2 actual
-  -- print $ part2' example2
+  -- print $ part2 actual
+  part2' actual
 
   printTimerLn timer
