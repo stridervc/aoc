@@ -29,7 +29,10 @@ newConwayCube cycles input = ConwayCube
         h           = ih + 2*cycles
         d           = 1  + 2*cycles
         -- TODO startslice needs padding on all 4 sides
-        startslice  = map (map (== '#')) input
+        tempslice   = map (map (== '#')) input
+        padrows     = replicate cycles $ replicate w False
+        padslice    = map (\r -> replicate cycles False ++ r ++ replicate cycles False) tempslice
+        startslice  = padrows ++ padslice ++ padrows
 
 -- just for debugging
 printConwayCube :: ConwayCube -> IO ()
@@ -85,5 +88,3 @@ main = do
   input <- lines <$> readFile "example17.txt"
 
   printConwayCube $ newConwayCube 6 input
-
-  print $ getNeighbours (newConwayCube 6 input) (6,6,6)
