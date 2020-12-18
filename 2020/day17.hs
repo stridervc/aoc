@@ -2,11 +2,11 @@ import Control.Monad (when)
 import Data.List.Split (chunksOf)
 import Text.Printf (printf)
 
-type ZSlice = [Bool]
+type ZSlice = [[Bool]]
 
 data ConwayCube = ConwayCube
   { cycles  :: !Int      -- the number of cycles this cube will support, determines max size
-  , current :: !Int      -- Current cycle
+  , current :: !Int      -- current cycle
   , slices  :: ![ZSlice]
   , width   :: !Int
   , height  :: !Int
@@ -22,14 +22,14 @@ newConwayCube cycles input = ConwayCube
   , height  = h
   , depth   = d
   }
-  where blankslice  = replicate (w*h) False
+  where blankslice  = replicate h $ replicate w False
         iw          = length $ head input
         ih          = length input
         w           = iw + 2*cycles
         h           = ih + 2*cycles
         d           = 1  + 2*cycles
         -- TODO startslice needs padding on all 4 sides
-        startslice  = map (== '#') $ concat input
+        startslice  = map (map (== '#')) input
 
 -- just for debugging
 printConwayCube :: ConwayCube -> IO ()
@@ -37,10 +37,10 @@ printConwayCube cube = do
   printf "Cycle %d / %d\n" (current cube) (cycles cube)
   printf "Slices = %d\n\n" (length $ slices cube)
   mapM_ printSlice $ zip [0..] $ slices cube
-  where printSlice (z, slice)  = when (or slice) (do
+  where printSlice (z, slice)  = when (or $ concat slice) (do
                                   putStr "z = "
                                   print $ z - cycles cube
-                                  mapM_ putStrLn $ chunksOf (width cube) $ map (\c -> if c then '#' else '.') slice
+                                  mapM_ (putStrLn . map (\c -> if c then '#' else '.')) slice
                                   )
 
 -- we can work with (0,0,0) being the top left of the slice we give newConwayCube
@@ -52,16 +52,17 @@ actualCoords cube (x,y,z) = (x+c, y+c, z+c)
 -}
 
 getXYZ :: ConwayCube -> (Int, Int, Int) -> Bool
-getXYZ cube (x,y,z) = slice !! (y*w+x)
+getXYZ cube (x,y,z) = slice !! y !! x
   where slice   = slices cube !! z
         w       = width cube
 
 setXYZ :: ConwayCube -> (Int, Int, Int) -> Bool -> ConwayCube
 setXYZ cube (x,y,z) val = cube { slices = slices' }
   where slice   = slices cube !! z
-        slice'  = take index slice ++ [val] ++ drop (index+1) slice
-        index   = y * width cube + x
-        slices' = take z (slices cube) ++ [slice'] ++ drop (z-1) (slices cube)
+        row     = slice !! y
+        row'    = take x row ++ [val] ++ drop (x+1) row
+        slice'  = take y slice ++ [row'] ++ drop (y+1) slice
+        slices' = take z (slices cube) ++ [slice'] ++ drop (z+1) (slices cube)
 
 getNeighbours :: ConwayCube -> (Int, Int, Int) -> [Bool]
 getNeighbours cube (x,y,z)  = map (getXYZ cube) ncoords
