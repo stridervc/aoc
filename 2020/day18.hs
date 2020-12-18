@@ -1,57 +1,48 @@
-import qualified Text.Parsec as P
-import Text.Parsec ((<|>))
-import Text.Parsec.String (Parser)
+import AoC
 
-data Eval = Value Int | Add Eval Eval | Mul Eval Eval
-  deriving (Eq, Show)
+import Data.Char (isDigit, digitToInt)
+import Data.Maybe (isJust)
 
-eval :: Eval -> Int
-eval (Value n)  = n
-eval (Add a b)  = eval a + eval b
-eval (Mul a b)  = eval a * eval b
+data Calc = Calc
+  { number    :: Int
+  , operator  :: Maybe Char
+  } deriving (Eq, Show)
 
-operator :: Parser Char
-operator = do
-  P.spaces
-  op <- P.char '+' <|> P.char '*'
-  P.spaces
-  return op
+newCalc :: Calc
+newCalc = Calc
+  { number    = 0
+  , operator  = Nothing
+  }
 
-evalParser :: Parser Eval
-evalParser  =
-  P.try (do
-    num <- P.many1 P.digit
-    op <- operator
-    expr <- evalParser
-    P.spaces
-    case op of
-      '+' -> return $ Add (Value $ read num) expr
-      _   -> return $ Mul (Value $ read num) expr
-    )
-  <|> P.try (do
-    _ <- P.char '('
-    P.spaces
-    expr <- evalParser
-    P.spaces
-    _ <- P.char ')'
-    return expr
-    )
-  <|> (do
-    num <- P.many1 P.digit
-    P.spaces
-    return $ Value $ read num
-    )
+inputNum :: Int -> Calc -> Calc
+inputNum num calc
+  | hasop     = case op of
+                  '+' -> calc' { number = n' + num }
+                  _   -> calc' { number = n' * num }
+  | otherwise = calc { number = num }
+  where hasop   = isJust $ operator calc
+        calc'   = calc { operator = Nothing }
+        Just op = operator calc
+        n'      = number calc
+
+process :: (String, Calc) -> (String, Calc)
+process ([], calc)      = ([], calc)
+process (' ':cs, calc)  = process (cs, calc)
+process ('(':cs, calc)  = let (cs', calc') = process (cs, newCalc) in process (cs', inputNum (number calc') calc)
+process (')':cs, calc)  = (cs, calc)
+process (c:cs, calc)
+  | digit               = process (cs, inputNum (digitToInt c) calc)
+  | otherwise           = process (cs, calc { operator = Just c })
+  where digit     = isDigit c
+
+part1 :: [String] -> Int
+part1 input = sum $ map (number . snd . (\s -> process (s, newCalc))) input
 
 main :: IO ()
 main = do
   let example1 = "2 * 3 + (4 * 5)"
+  let example2 = "5 + (8 * 3 + 9 + 3 * 4 * 3)"
 
-  print example1
-  print $ eval $ Add (Mul (Value 2) (Value 3)) (Mul (Value 4) (Value 5))
+  input <- lines <$> readFile "input18.txt"
 
-  let e = P.parse evalParser "(example1)" example1
-  case e of
-    Left err    -> print err
-    Right expr  -> do
-      print expr
-      print $ eval expr
+  testAndRun_ part1 [([example1], 26), ([example2], 437)] input
