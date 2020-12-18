@@ -1,19 +1,18 @@
 import AoC
 
 import Control.Monad (when)
-import Data.List.Split (chunksOf)
 import Text.Printf (printf)
 
 type ZSlice = [[Bool]]
 type Coord  = (Int, Int, Int)
 
 data ConwayCube = ConwayCube
-  { cycles  :: !Int      -- the number of cycles this cube will support, determines max size
-  , current :: !Int      -- current cycle
-  , slices  :: ![ZSlice]
-  , width   :: !Int
-  , height  :: !Int
-  , depth   :: !Int
+  { cycles  :: Int      -- the number of cycles this cube will support, determines max size
+  , current :: Int      -- current cycle
+  , slices  :: [ZSlice]
+  , width   :: Int
+  , height  :: Int
+  , depth   :: Int
   } deriving (Eq, Show)
 
 newConwayCube :: Int -> [String] -> ConwayCube
@@ -48,14 +47,6 @@ printConwayCube cube = do
                                   print $ z - cycles cube
                                   mapM_ (putStrLn . map (\c -> if c then '#' else '.')) slice
                                   )
-
--- we can work with (0,0,0) being the top left of the slice we give newConwayCube
--- this gives the coords as ConwayCube uses them
-{-
-actualCoords :: ConwayCube -> (Int, Int, Int) -> (Int, Int, Int)
-actualCoords cube (x,y,z) = (x+c, y+c, z+c)
-  where c = cycles cube
--}
 
 getXYZ :: ConwayCube -> Coord -> Bool
 getXYZ cube (x,y,z) = slice !! y !! x
