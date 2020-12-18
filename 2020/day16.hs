@@ -8,6 +8,15 @@ import Data.Maybe (isJust, catMaybes)
 
 import qualified Data.Map.Strict as M
 
+{-
+ - Idea for solving this
+ - Make a grid of rules and tickets,
+ - mark where these intersect,
+ - where there's only 1 mark on a row or column,
+ - that eliminates either a row or ticket?
+ - IOW, almost a sudoku like approach
+ -}
+
 type RuleLimit  = (Int, Int)
 type Rule       = (String, [RuleLimit])
 type Ticket     = [Int]
