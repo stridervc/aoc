@@ -42,7 +42,6 @@ numParser = do
   P.spaces
   return $ read num
 
--- 28: 77 | 91
 ruleParser :: RulesMap -> Parser Rule
 ruleParser rules =
   P.try (do
@@ -98,6 +97,5 @@ main = do
   example <- readFile "example19.txt"
   actual  <- readFile "input19.txt"
 
-  print $ part1 example
   testAndRun_ part1 [(example, 2)] actual
 
