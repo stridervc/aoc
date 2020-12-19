@@ -69,15 +69,15 @@ parsedRule rules i  = case P.parse (ruleParser rules) ("(ruleParser rule " ++ sh
   where Just rule = M.lookup i rules
 
 satisfiesRules :: [Rule] -> String -> (Bool, String)
-satisfiesRules rules                    []      = (null rules, [])
+satisfiesRules rules                    []      = (True, [])
 satisfiesRules []                       cs      = (True, cs)
 satisfiesRules (RuleChar ch:rs)         (c:cs)  = let (ret, cs') = satisfiesRules rs cs in (c == ch && ret, cs')
-satisfiesRules (RuleOption rs1 rs2:rs)  cs
+satisfiesRules (RuleOption rsl rsr:rs)  cs
   | left      = satisfiesRules rs csl
   | right     = satisfiesRules rs csr
   | otherwise = (False, cs)
-  where (left, csl)   = satisfiesRules rs1 cs
-        (right, csr)  = satisfiesRules rs2 cs
+  where (left, csl)   = satisfiesRules rsl cs
+        (right, csr)  = satisfiesRules rsr cs
 
 satisfiesRules (RuleSeq rules:rs)       cs      = (retseq && ret, cs')
   where (retseq, csseq) = satisfiesRules rules cs
