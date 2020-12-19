@@ -12,6 +12,8 @@ data Rule = RuleSeq [Rule] | RuleOption [Rule] [Rule] | RuleChar Char
 type RuleStr  = String
 type Message  = String
 
+type  RulesMap = M.Map Int String
+
 parseRuleLine :: Parser (Int, RuleStr)
 parseRuleLine = do
   index <- P.many1 P.digit
@@ -34,8 +36,68 @@ parseInput = do
   P.eof
   return (rules, msgs)
 
+numParser :: Parser Int
+numParser = do
+  num <- P.many1 P.digit
+  P.spaces
+  return $ read num
+
+-- 28: 77 | 91
+ruleParser :: RulesMap -> Parser Rule
+ruleParser rules =
+  P.try (do
+    P.char '"'
+    ch <- P.letter
+    P.char '"'
+    return $ RuleChar ch
+    )
+  <|> P.try (do
+    numsl <- P.many1 numParser
+    P.string "| "
+    numsr <- P.many1 numParser
+    return $ RuleOption (map rl numsl) (map rl numsr)
+    )
+  <|> (do
+    nums <- P.sepBy1 (P.many1 P.digit) P.space
+    return $ RuleSeq $ map (rl . read) nums
+    )
+  where rl = parsedRule rules
+
+parsedRule :: RulesMap -> Int -> Rule
+parsedRule rules i  = case P.parse (ruleParser rules) ("(ruleParser rule " ++ show i ++ ")") rule of
+                        Right rule  -> rule
+                        Left err    -> error $ show err
+  where Just rule = M.lookup i rules
+
+satisfiesRules :: [Rule] -> String -> (Bool, String)
+satisfiesRules rules                    []      = (null rules, [])
+satisfiesRules []                       cs      = (True, cs)
+satisfiesRules (RuleChar ch:rs)         (c:cs)  = let (ret, cs') = satisfiesRules rs cs in (c == ch && ret, cs')
+satisfiesRules (RuleOption rs1 rs2:rs)  cs
+  | left      = satisfiesRules rs csl
+  | right     = satisfiesRules rs csr
+  | otherwise = (False, cs)
+  where (left, csl)   = satisfiesRules rs1 cs
+        (right, csr)  = satisfiesRules rs2 cs
+
+satisfiesRules (RuleSeq rules:rs)       cs      = (retseq && ret, cs')
+  where (retseq, csseq) = satisfiesRules rules cs
+        (ret, cs')      = satisfiesRules rs csseq
+
+satisfiesRule :: Rule -> String -> Bool
+satisfiesRule rule cs = ret && null cs'
+  where (ret, cs')  = satisfiesRules [rule] cs
+
+part1 :: String -> Int
+part1 input = length $ filter id $ map (satisfiesRule (parsedRule rules 0)) msgs
+  where Right (rulestrs, msgs)  = P.parse parseInput "" input
+        rules                   = M.fromList rulestrs
+
 main :: IO ()
 main = do
   example <- readFile "example19.txt"
+  actual  <- readFile "input19.txt"
 
-  print $ P.parse parseInput "(example19)" example
+  print $ part1 example
+  testAndRun_ part1 [(example, 2)] actual
+
